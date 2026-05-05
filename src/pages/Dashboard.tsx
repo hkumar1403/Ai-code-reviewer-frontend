@@ -12,6 +12,25 @@ export const Dashboard = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const navigate = useNavigate();
 
+  async function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setLoading(true);
+    const res = await api.post("/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    setCode(res.data.data.code);
+    setReview(res.data.data.review);
+    setLoading(false);
+    fetchProjects();
+
+    e.target.value = "";
+  }
+
   async function fetchProject(id: string) {
     const res = await api.get(`/projects/${id}`);
     const p = res.data.data;
@@ -223,12 +242,52 @@ export const Dashboard = () => {
                 </>
               )}
             </button>
+            <label
+              className="flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-medium transition-all duration-150"
+              style={{
+                background: "#18181f",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.75)",
+                cursor: loading ? "not-allowed" : "pointer",
+                fontFamily: "inherit",
+                opacity: loading ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (loading) return;
+                e.currentTarget.style.borderColor = "rgba(99,102,241,0.45)";
+                e.currentTarget.style.color = "rgba(255,255,255,0.9)";
+              }}
+              onMouseLeave={(e) => {
+                if (loading) return;
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                e.currentTarget.style.color = "rgba(255,255,255,0.75)";
+              }}
+            >
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <path
+                  d="M5.5 7V1M2 4l3.5-3.5L9 4M1 9.5h9"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Upload .js
+              <input
+                type="file"
+                accept=".js,application/javascript"
+                className="hidden"
+                disabled={loading}
+                onChange={uploadFile}
+              />
+            </label>
             <span
               className="text-[11px]"
               style={{ color: "rgba(255,255,255,0.14)" }}
             >
               ⌘ ↵
             </span>
+
             {selectedProject && (
               <button
                 className="text-[11px] px-2 py-1 rounded"
