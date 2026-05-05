@@ -9,7 +9,16 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [review, setReview] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const navigate = useNavigate();
+
+  async function fetchProject(id: string) {
+    const res = await api.get(`/projects/${id}`);
+    const p = res.data.data;
+
+    setCode(p.code);
+    setReview(p.review);
+  }
 
   async function fetchProjects() {
     const res = await api.get("/projects");
@@ -220,6 +229,25 @@ export const Dashboard = () => {
             >
               ⌘ ↵
             </span>
+            {selectedProject && (
+              <button
+                className="text-[11px] px-2 py-1 rounded"
+                style={{
+                  color: "rgba(255,255,255,0.3)",
+                  background: "none",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+                onClick={() => {
+                  setSelectedProject(null);
+                  setCode("");
+                  setReview("");
+                }}
+              >
+                + New
+              </button>
+            )}
           </div>
         </div>
 
@@ -318,13 +346,24 @@ export const Dashboard = () => {
                 style={{
                   gridTemplateColumns: "24px 1fr 1fr 12px",
                   borderTop: i === 0 ? "none" : borderMuted,
-                  cursor: "default",
+                  cursor: "pointer",
+                  background:
+                    selectedProject?._id === p._id
+                      ? "rgba(99,102,241,0.06)"
+                      : "transparent",
+                }}
+                onClick={() => {
+                  setSelectedProject(p);
+                  fetchProject(p._id);
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.background = "rgba(255,255,255,0.02)")
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
+                  (e.currentTarget.style.background =
+                    selectedProject?._id === p._id
+                      ? "rgba(99,102,241,0.06)"
+                      : "transparent")
                 }
               >
                 <span
@@ -334,7 +373,7 @@ export const Dashboard = () => {
                     color: "rgba(255,255,255,0.18)",
                   }}
                 >
-                  {projects.length - i}
+                  {i + 1}
                 </span>
                 <span
                   className="overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px]"
